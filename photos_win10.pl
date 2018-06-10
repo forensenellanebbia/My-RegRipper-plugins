@@ -53,7 +53,7 @@ my (@ts,$d);
 sub pluginmain {
 	my $class = shift;
 	my $hive  = shift;
-	::rptMsg("app_msphotos v.".$VERSION); 
+	::rptMsg("photos_win10 v.".$VERSION); 
 	::rptMsg("(".getHive().") ".getShortDescr()."\n");
 	my $reg = Parse::Win32Registry->new($hive);
 	my $root_key = $reg->get_root_key;
