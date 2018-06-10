@@ -1,5 +1,5 @@
 #-----------------------------------------------------------
-# app_msedge.pl
+# msedge_win10.pl
 # Plugin for RegRipper 
 #
 # Parses Microsoft Edge (Windows App) key:
@@ -24,7 +24,7 @@
 # copyright 2018 Gabriele Zambelli <forensenellanebbia@gmail.com> | Twitter: @gazambelli
 #-----------------------------------------------------------
 
-package app_msedge;
+package msedge_win10;
 use strict;
 
 my %config = (hive          => "USRCLASS\.DAT",

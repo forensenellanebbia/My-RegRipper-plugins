@@ -1,5 +1,5 @@
 #-----------------------------------------------------------
-# app_msphotos.pl
+# photos_win10.pl
 # Plugin for RegRipper 
 #
 # Parses Microsoft Photos (Windows App) key:
@@ -13,20 +13,24 @@
 #  - Microsoft.Windows.Photos_2018.18022.15810.1000_x64__8wekyb3d8bbwe
 #
 # The script code is based on:
-#    - adoberdr.pl/landesk.pl by H. Carvey
+#    - adoberdr.pl/landesk.pl/photos.pl by H. Carvey
 #    - iexplore.pl by E. Rye esten@ryezone.net
 #      http://www.ryezone.net/regripper-and-internet-explorer-1
 #
 # Change history
 #   20180610 - First release
 #
+# To Dos
+#   Extract value name "Link"
+#
 # References
 #   https://forensenellanebbia.blogspot.com/2018/06/usrclassdat-stores-more-history-than.html
+#   https://df-stream.com/2013/03/windows-8-tracking-opened-photos/
 #
 # copyright 2018 Gabriele Zambelli <forensenellanebbia@gmail.com> | Twitter: @gazambelli
 #-----------------------------------------------------------
 
-package app_msphotos;
+package photos_win10;
 use strict;
 
 my %config = (hive          => "USRCLASS\.DAT",
