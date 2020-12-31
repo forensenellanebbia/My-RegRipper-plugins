@@ -3,6 +3,7 @@
 # Plugin for Registry Ripper 
 #
 # Parse Foxit Reader MRU keys:
+#    - HKCU\SOFTWARE\Foxit Software\Foxit Reader X.0\CommentPanel\Filter
 #    - HKCU\SOFTWARE\Foxit Software\Foxit Reader X.0\MRU\File MRU
 #    - HKCU\SOFTWARE\Foxit Software\Foxit Reader X.0\MRU\Place MRU
 #    - HKCU\SOFTWARE\Foxit Software\Foxit Reader X.0\Preferences\History\LastOpen
@@ -13,12 +14,13 @@
 #      http://www.ryezone.net/regripper-and-internet-explorer-1
 #
 # Change history
+#   20201231 - Added extraction from key path "CommentPanel\Filter". Thanks to Hyun Yi (hyuunnn)
 #   20170326 - First release
 #
 # References
 #   https://forensenellanebbia.blogspot.it/2017/04/regripper-plugin-to-parse-foxit-reader.html
 #
-# copyright 2017 Gabriele Zambelli <gzambelli81@gmail.com>
+# copyright 2017 Gabriele Zambelli @gazambelli
 #-----------------------------------------------------------
 
 package foxitrdr;
@@ -29,7 +31,7 @@ my %config = (hive          => "NTUSER\.DAT",
               hasShortDescr => 1,
               hasDescr      => 0,
               hasRefs       => 0,
-              version       => 20170326);
+              version       => 20201231);
 
 sub getShortDescr { return "Get values from the user's Foxit Reader key"; }
 	
@@ -52,18 +54,19 @@ sub pluginmain {
 	my $version;
 	my $tag = 0;
 	my @globalitems = ();
-	my @versions = ("4\.0","5\.0","6\.0","7\.0","8\.0","9\.0","10\.0","11\.0","12\.0","13\.0","14\.0","15\.0");
-	foreach my $ver (@versions) {		
-		my $key_path = "Software\\Foxit Software\\Foxit Reader ".$ver."";
+	my @versions = (1..100);
+	foreach my $ver (@versions) {
+		my $key_path = "Software\\Foxit Software\\Foxit Reader ".$ver.".0";
 		if (defined($root_key->get_subkey($key_path))) {
-			$version = $ver;
+			$version = $ver.".0";
 			$tag = 1;
 		}
 	}
-
+	
+	#\\MRU
 	if ($tag) {
 		::rptMsg("Foxit Reader version ".$version." located.");
-		my $key_path = "Software\\Foxit Software\\Foxit Reader ".$version."";
+		my $key_path = "Software\\Foxit Software\\Foxit Reader ".$version;
 		my $key;
 		if ($key = $root_key->get_subkey($key_path."\\MRU")) {
 			::rptMsg($key_path);
@@ -107,9 +110,65 @@ sub pluginmain {
 	else {
 		::rptMsg("Foxit Reader version not found.");
 	}
-	
+
+	#\\CommentPanel\\Filter
 	if ($tag) {
-		my $key_path = "Software\\Foxit Software\\Foxit Reader ".$version."";
+		my $key_path = "Software\\Foxit Software\\Foxit Reader ".$version;
+		my $key;
+		if ($key = $root_key->get_subkey($key_path."\\CommentPanel\\Filter")) {
+			::rptMsg("\n\n".$key_path."\\CommentPanel\\Filter");
+			::rptMsg("LastWrite Time ".gmtime($key->get_timestamp())." (UTC)");
+			my %vals = getKeyValues($key);
+			if (scalar(keys %vals) > 0) {
+				foreach my $v (keys %vals) {
+					::rptMsg("\t".$v." -> ".$vals{$v});
+				}
+			}
+			else {
+			}               
+			my @sk = $key->get_list_of_subkeys();
+			my @arr;
+			if (scalar(@sk) > 0) {
+				foreach my $s (@sk) {
+					#::rptMsg($key_path."\\CommentPanel\\Filter\\".$s->get_name());
+					my %vals = getKeyValues($s);
+					my $record_file;
+					my $record_order;
+					foreach my $v (keys %vals) {
+						if ($v =~ m/^File/) {
+							$record_file = $vals{$v};
+						}
+						if ($v =~ m/^Order/) {
+							$record_order = $vals{$v};
+						}
+					}
+					push (@arr, $record_order."\t".$record_file);
+				}
+				if (scalar(@arr) > 0) {
+					::rptMsg("Note: All value names are listed in MRU order (0 = oldest)");
+					::rptMsg("\tOrder\tFile");
+					#sort items in the array
+					foreach my $i (sort {$b <=> $a} @arr){
+						::rptMsg("\t".$i);
+						}
+					}
+			}
+			else {
+				::rptMsg("");
+				::rptMsg($key_path." has no subkeys.");
+			}
+		}
+		else {
+			::rptMsg($key_path." not found.");
+			::logMsg($key_path." not found.");
+		}
+	}
+	else {
+	}
+	
+	#\\Preferences\\History\\LastOpen
+	if ($tag) {
+		my $key_path = "Software\\Foxit Software\\Foxit Reader ".$version;
 		my $key;
 		if ($key = $root_key->get_subkey($key_path."\\Preferences\\History\\LastOpen")) {
 			::rptMsg("\n\n".$key_path."\\Preferences\\History\\LastOpen");
